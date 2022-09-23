@@ -49,6 +49,7 @@
     "aws-lambda": "^1.0.7",
     "aws-sdk": "^2.1220.0",
     "aws-sdk-mock": "^5.7.0",
+    "axios": "^0.25.0",
     "axios-mock-adapter": "^1.16.0",
     "eslint": "^8.23.1",
     "eslint-config-standard-with-typescript": "^23.0.0",
