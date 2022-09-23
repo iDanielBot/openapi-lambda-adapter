@@ -1,6 +1,6 @@
 import { APIGatewayProxyStructuredResultV2 } from 'aws-lambda'
 import { AxiosRequestConfig } from 'axios'
-import { HttpMethod, Operation } from 'openapi-client-axios'
+import { AxiosError, HttpMethod, Operation } from 'openapi-client-axios'
 import { convertAxiosToApiGw, convertApiGwToAxios } from './openapi-lambda-adapters'
 
 describe('Adapt axios request/response to AWS Lambda Proxy Event/Response', () => {
@@ -236,13 +236,18 @@ describe('Adapt axios request/response to AWS Lambda Proxy Event/Response', () =
       }
 
       // then
-      const axiosResp = convertApiGwToAxios(apiGwResp, axiosConfig)
-      expect(axiosResp.config).toEqual(axiosConfig)
-      expect(axiosResp.status).toEqual(400)
-      expect(axiosResp.statusText).toEqual('Bad Request')
-      expect(axiosResp.data).toEqual({
-        message: 'email is mandatory'
-      })
+      try {
+        convertApiGwToAxios(apiGwResp, axiosConfig)
+        expect('Should have thrown error').toEqual('No error was thrown')
+      } catch (err) {
+        const error = err as AxiosError
+        expect(error.isAxiosError).toBeTruthy()
+        expect(error.message).toEqual('Request failed with status code 400')
+        expect(error.response?.config).toEqual(axiosConfig)
+        expect(error.response?.status).toEqual(400)
+        expect(error.response?.statusText).toEqual('Bad Request')
+      }
+
     })
 
     it('converts HTTP 403 to axios response', () => {
@@ -263,11 +268,18 @@ describe('Adapt axios request/response to AWS Lambda Proxy Event/Response', () =
       }
 
       // then
-      const axiosResp = convertApiGwToAxios(apiGwResp, axiosConfig)
-      expect(axiosResp.config).toEqual(axiosConfig)
-      expect(axiosResp.status).toEqual(403)
-      expect(axiosResp.statusText).toEqual('Forbidden')
-      expect(axiosResp.data).toBeUndefined()
+      try {
+        convertApiGwToAxios(apiGwResp, axiosConfig)
+        expect('Should have thrown error').toEqual('No error was thrown')
+      } catch (err) {
+        const error = err as AxiosError
+        expect(error.isAxiosError).toBeTruthy()
+        expect(error.message).toEqual('Request failed with status code 403')
+        expect(error.response?.config).toEqual(axiosConfig)
+        expect(error.response?.status).toEqual(403)
+        expect(error.response?.statusText).toEqual('Forbidden')
+      }
+
     })
 
     it('converts HTTP 404 to axios response', () => {
@@ -282,11 +294,18 @@ describe('Adapt axios request/response to AWS Lambda Proxy Event/Response', () =
       }
 
       // then
-      const axiosResp = convertApiGwToAxios(apiGwResp, axiosConfig)
-      expect(axiosResp.config).toEqual(axiosConfig)
-      expect(axiosResp.status).toEqual(404)
-      expect(axiosResp.statusText).toEqual('Not Found')
-      expect(axiosResp.data).toBeUndefined()
+      try {
+        const axiosResp = convertApiGwToAxios(apiGwResp, axiosConfig)
+        expect('Should have thrown error').toEqual('No error was thrown')
+      } catch (err) {
+        const error = err as AxiosError
+        expect(error.isAxiosError).toBeTruthy()
+        expect(error.message).toEqual('Request failed with status code 404')
+        expect(error.response?.config).toEqual(axiosConfig)
+        expect(error.response?.status).toEqual(404)
+        expect(error.response?.statusText).toEqual('Not Found')
+      }
+
     })
 
     it('converts HTTP 409 to axios response', () => {
@@ -301,13 +320,20 @@ describe('Adapt axios request/response to AWS Lambda Proxy Event/Response', () =
       }
 
       // then
-      const axiosResp = convertApiGwToAxios(apiGwResp, axiosConfig)
-      expect(axiosResp.config).toEqual(axiosConfig)
-      expect(axiosResp.status).toEqual(409)
-      expect(axiosResp.statusText).toEqual('Conflict')
-      expect(axiosResp.data).toEqual({
-        message: 'User johnny was updated in the meantime. Please refresh'
-      })
+      try {
+        const axiosResp = convertApiGwToAxios(apiGwResp, axiosConfig)
+        expect('Should have thrown error').toEqual('No error was thrown')
+      } catch (err) {
+        const error = err as AxiosError
+        expect(error.isAxiosError).toBeTruthy()
+        expect(error.message).toEqual('Request failed with status code 409')
+        expect(error.response?.config).toEqual(axiosConfig)
+        expect(error.response?.status).toEqual(409)
+        expect(error.response?.statusText).toEqual('Conflict')
+        expect(error.response?.data).toEqual({
+          message: 'User johnny was updated in the meantime. Please refresh'
+        })
+      }
     })
 
     it('converts HTTP 500 to axios response', () => {
@@ -322,13 +348,21 @@ describe('Adapt axios request/response to AWS Lambda Proxy Event/Response', () =
       }
 
       // then
-      const axiosResp = convertApiGwToAxios(apiGwResp, axiosConfig)
-      expect(axiosResp.config).toEqual(axiosConfig)
-      expect(axiosResp.status).toEqual(500)
-      expect(axiosResp.statusText).toEqual('Internal Server Error')
-      expect(axiosResp.data).toEqual({
-        message: 'Internal server error.'
-      })
+      try {
+        const axiosResp = convertApiGwToAxios(apiGwResp, axiosConfig)
+        expect('Should have thrown error').toEqual('No error was thrown')
+      } catch (err) {
+        const error = err as AxiosError
+        expect(error.isAxiosError).toBeTruthy()
+        expect(error.message).toEqual('Request failed with status code 500')
+        expect(error.response?.config).toEqual(axiosConfig)
+        expect(error.response?.status).toEqual(500)
+        expect(error.response?.statusText).toEqual('Internal Server Error')
+        expect(error.response?.data).toEqual({
+          message: 'Internal server error.'
+        })
+      }
+
     })
 
   })
