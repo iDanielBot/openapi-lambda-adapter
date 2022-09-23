@@ -1,7 +1,7 @@
 {
   "name": "openapi-lambda-adapter",
   "description": "JavaScript client library for integrating AWS Lambdas with openapi-client-axios",
-  "version": "1.0.0",
+  "version": "0.1.0-alpha.1",
   "author": "idanielbot botdaniel11@gmail.com ",
   "license": "MIT",
   "keywords": [
