@@ -7,6 +7,7 @@ import type { Runner, Operation, UnknownContext } from 'openapi-client-axios'
 import { invokeLambda } from './lambda-invoker'
 import { params } from 'bath/params'
 import { safeParseJson } from './util'
+import { nanoid } from 'nanoid';
 
 export const getLambdaRunner = (functionName: string): Runner => {
   return {
@@ -77,7 +78,7 @@ export const convertAxiosToApiGw = (config: AxiosRequestConfig, operation: Opera
         protocol: 'HTTP/1.1',
         userAgent: 'lambda-invoke'
       },
-      requestId: 'YgeNKidKliAEJYQ=',
+      requestId: `lambda-invoke-${nanoid()}`,
       routeKey: '$default',
       stage: '$default',
       time: new Date().toISOString(),
