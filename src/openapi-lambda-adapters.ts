@@ -7,7 +7,7 @@ import type { Runner, Operation, UnknownContext } from 'openapi-client-axios'
 import { invokeLambda } from './lambda-invoker'
 import { params } from 'bath/params'
 import { safeParseJson } from './util'
-import { nanoid } from 'nanoid';
+import { v4 as uuidv4 } from 'uuid';
 
 export const getLambdaRunner = (functionName: string): Runner => {
   return {
@@ -78,7 +78,7 @@ export const convertAxiosToApiGw = (config: AxiosRequestConfig, operation: Opera
         protocol: 'HTTP/1.1',
         userAgent: 'lambda-invoke'
       },
-      requestId: `lambda-invoke-${nanoid()}`,
+      requestId: `lambda-invoke-${uuidv4()}`,
       routeKey: '$default',
       stage: '$default',
       time: new Date().toISOString(),
@@ -113,7 +113,7 @@ class AxiosError extends Error {
   public readonly response: AxiosResponse
   public readonly isAxiosError: boolean
 
-  constructor (message: string, code: string, response: AxiosResponse) {
+  constructor(message: string, code: string, response: AxiosResponse) {
     super(message)
 
     this.message = message
@@ -127,7 +127,7 @@ class AxiosError extends Error {
     response?.request && (this.request = response.request)
   }
 
-  public toJSON () {
+  public toJSON() {
     return {
       // Standard
       message: this.message,
