@@ -34,6 +34,22 @@ describe('Lambda invoker', () => {
     }))
   })
 
+  it('process 200 response with timeout error returned', async () => {
+    // given
+    AWSMock.mock('Lambda', 'invoke', (_req: AWS.Lambda.InvocationRequest, callback: Function) => {
+      callback(null, {
+        StatusCode: 200,
+        FunctionError: 'Unhandled',
+        Payload: JSON.stringify({
+          errorMessage: "2023-01-09T10:48:53.262Z 873b04e4-991b-4d5f-b7ca-b99df84bfd66 Task timed out after 1.00 seconds"
+        })
+      });
+    })
+
+    // then
+    await expect(invokeLambda({ payload: '', functionName: 'test' })).rejects.toThrow()
+  })
+
   it('process 200 response with non APIGatewayProxyStructuredResultV2 payload', async () => {
     // given
     AWSMock.mock('Lambda', 'invoke', (_req: AWS.Lambda.InvocationRequest, callback: Function) => {
