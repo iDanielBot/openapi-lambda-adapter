@@ -28,6 +28,10 @@ export const invokeLambda = async (params: { payload: string, functionName: stri
     throw new Error(`Failed to invoke lambda ${params.functionName} synchronously`)
   }
 
+  if (hasTimeout(res)) {
+    throw new Error(res.Payload?.toString())
+  }
+
   const response = safeParseJson(res.Payload?.toString())
 
   // response is not in JSON format
@@ -51,3 +55,5 @@ const isApiGwStructuredResp = (resp: unknown): resp is APIGatewayProxyStructured
 
   return true
 }
+
+const hasTimeout = (res: Lambda.InvocationResponse) => 'FunctionError' in res && res.Payload?.toString().includes('Task timed out')
