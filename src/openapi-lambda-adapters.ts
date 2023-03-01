@@ -58,11 +58,16 @@ export const convertAxiosToApiGw = (config: AxiosRequestConfig, operation: Opera
   const urlSearchParams = new URLSearchParams()
   Object.entries(config.params ?? {}).forEach(([key, val]) => urlSearchParams.append(key, val.toString()))
 
+  const headers: Record<string, string> = {}
+  for (const [key, val] of Object.entries(config.headers ?? {}).filter(([_key, val]) => val !== null && val !== undefined)) {
+    headers[key] = val.toString()
+  }
+
   const lambdaPayload = {
     version: '2.0',
     routeKey: '$default',
     rawPath: config.url,
-    headers: { ...(config.headers ?? {}) },
+    headers,
     queryStringParameters: queryParams,
     rawQueryString: queryString.join('&'),
     pathParameters: pathParams,
