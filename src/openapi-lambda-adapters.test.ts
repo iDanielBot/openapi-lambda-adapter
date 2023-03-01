@@ -141,6 +141,39 @@ describe('Adapt axios request/response to AWS Lambda Proxy Event/Response', () =
       })
       expect(event.rawQueryString).toEqual('colors=red&colors=blue&number=0&boolean=false')
     })
+
+    it('converts axios call with non-string headers', () => {
+      // given
+      const axiosConfig: AxiosRequestConfig = {
+        method: 'get',
+        url: '/v1/users',
+        headers: {
+          'x-boolean': true,
+          'x-number': 100,
+          'x-object': {
+            key: 'value'
+          },
+          'x-array': ['a', 'b'],
+          'x-null': null,
+          'x-string': 'string'
+        } as unknown as Record<string, string>
+      }
+      const operation: Operation = {
+        path: '/v1/users',
+        method: HttpMethod.Get,
+        responses: {}
+      }
+
+      // then
+      const event = convertAxiosToApiGw(axiosConfig, operation)
+      
+      expect(event.headers['x-boolean']).toBe('true')
+      expect(event.headers['x-number']).toBe('100')
+      expect(event.headers['x-string']).toBe('string')
+      expect(event.headers['x-object']).toBe('[object Object]')
+      expect(event.headers['x-array']).toBe('a,b')
+      expect(event.headers['x-null']).toBeUndefined()
+    })
   })
 
   describe('Api GW Proxy Response to Axios Response', () => {

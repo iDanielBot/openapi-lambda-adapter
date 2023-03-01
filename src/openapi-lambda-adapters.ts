@@ -7,7 +7,7 @@ import type { Runner, Operation, UnknownContext } from 'openapi-client-axios'
 import { invokeLambda } from './lambda-invoker'
 import { params } from 'bath/params'
 import { safeParseJson } from './util'
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid'
 
 export const getLambdaRunner = (functionName: string): Runner => {
   return {
@@ -53,11 +53,16 @@ export const convertAxiosToApiGw = (config: AxiosRequestConfig, operation: Opera
   const urlSearchParams = new URLSearchParams()
   Object.entries(config.params ?? {}).forEach(([key, val]) => urlSearchParams.append(key, val.toString()))
 
+  const headers: Record<string, string> = {}
+  for (const [key, val] of Object.entries(config.headers ?? {}).filter(([_key, val]) => val !== null)) {
+    headers[key] = val.toString()
+  }
+
   return {
     version: '2.0',
     routeKey: '$default',
     rawPath: config.url,
-    headers: { ...(config.headers ?? {}) },
+    headers,
     queryStringParameters: queryParams,
     rawQueryString: queryString.join('&'),
     pathParameters: pathParams,
@@ -113,7 +118,7 @@ class AxiosError extends Error {
   public readonly response: AxiosResponse
   public readonly isAxiosError: boolean
 
-  constructor(message: string, code: string, response: AxiosResponse) {
+  constructor (message: string, code: string, response: AxiosResponse) {
     super(message)
 
     this.message = message
@@ -127,7 +132,7 @@ class AxiosError extends Error {
     response?.request && (this.request = response.request)
   }
 
-  public toJSON() {
+  public toJSON () {
     return {
       // Standard
       message: this.message,
