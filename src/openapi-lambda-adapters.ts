@@ -2,12 +2,17 @@ import {
   APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2,
   APIGatewayProxyEventQueryStringParameters, APIGatewayProxyEventPathParameters
 } from 'aws-lambda'
+
+import createDebug from 'debug'
+
 import type { AxiosRequestConfig, AxiosResponse } from 'axios'
 import type { Runner, Operation, UnknownContext } from 'openapi-client-axios'
 import { invokeLambda } from './lambda-invoker'
 import { params } from 'bath/params'
 import { safeParseJson } from './util'
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid'
+
+const debug = createDebug('openapi-lambda-adapter')
 
 export const getLambdaRunner = (functionName: string): Runner => {
   return {
@@ -53,7 +58,7 @@ export const convertAxiosToApiGw = (config: AxiosRequestConfig, operation: Opera
   const urlSearchParams = new URLSearchParams()
   Object.entries(config.params ?? {}).forEach(([key, val]) => urlSearchParams.append(key, val.toString()))
 
-  return {
+  const lambdaPayload = {
     version: '2.0',
     routeKey: '$default',
     rawPath: config.url,
@@ -88,9 +93,15 @@ export const convertAxiosToApiGw = (config: AxiosRequestConfig, operation: Opera
     isBase64Encoded: false,
     httpMethod: config.method
   } as APIGatewayProxyEventV2
+
+  debug('lambdaRequest %o', lambdaPayload)
+
+  return lambdaPayload
 }
 
 export const convertApiGwToAxios = (resp: APIGatewayProxyStructuredResultV2, axiosConfig: AxiosRequestConfig) => {
+  debug('lambdaResponse %o', resp)
+
   const axiosResp = {
     config: axiosConfig,
     status: resp.statusCode,
@@ -113,7 +124,7 @@ class AxiosError extends Error {
   public readonly response: AxiosResponse
   public readonly isAxiosError: boolean
 
-  constructor(message: string, code: string, response: AxiosResponse) {
+  constructor (message: string, code: string, response: AxiosResponse) {
     super(message)
 
     this.message = message
@@ -127,7 +138,7 @@ class AxiosError extends Error {
     response?.request && (this.request = response.request)
   }
 
-  public toJSON() {
+  public toJSON () {
     return {
       // Standard
       message: this.message,
