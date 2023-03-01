@@ -54,7 +54,7 @@ export const convertAxiosToApiGw = (config: AxiosRequestConfig, operation: Opera
   Object.entries(config.params ?? {}).forEach(([key, val]) => urlSearchParams.append(key, val.toString()))
 
   const headers: Record<string, string> = {}
-  for (const [key, val] of Object.entries(config.headers ?? {}).filter(([_key, val]) => val !== null)) {
+  for (const [key, val] of Object.entries(config.headers ?? {}).filter(([_key, val]) => val !== null && val !== undefined)) {
     headers[key] = val.toString()
   }
 

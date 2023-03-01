@@ -150,11 +150,13 @@ describe('Adapt axios request/response to AWS Lambda Proxy Event/Response', () =
         headers: {
           'x-boolean': true,
           'x-number': 100,
+          'x-zero': 0,
           'x-object': {
             key: 'value'
           },
           'x-array': ['a', 'b'],
           'x-null': null,
+          'x-undefined': undefined,
           'x-string': 'string'
         } as unknown as Record<string, string>
       }
@@ -169,10 +171,12 @@ describe('Adapt axios request/response to AWS Lambda Proxy Event/Response', () =
       
       expect(event.headers['x-boolean']).toBe('true')
       expect(event.headers['x-number']).toBe('100')
+      expect(event.headers['x-zero']).toBe('0')
       expect(event.headers['x-string']).toBe('string')
       expect(event.headers['x-object']).toBe('[object Object]')
       expect(event.headers['x-array']).toBe('a,b')
       expect(event.headers['x-null']).toBeUndefined()
+      expect(event.headers['x-undefined']).toBeUndefined()
     })
   })
 
