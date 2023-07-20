@@ -1,6 +1,7 @@
 import {
   APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2,
-  APIGatewayProxyEventQueryStringParameters, APIGatewayProxyEventPathParameters
+  APIGatewayProxyEventQueryStringParameters, APIGatewayProxyEventPathParameters,
+  Context
 } from 'aws-lambda'
 
 import createDebug from 'debug'
@@ -14,22 +15,22 @@ import { v4 as uuidv4 } from 'uuid'
 
 const debug = createDebug('openapi-lambda-adapter')
 
-export const getLambdaRunner = (functionName: string): Runner => {
+export const getLambdaRunner = (targetFunctionName: string, crtLambdaContext?: Context): Runner => {
   return {
     runRequest: lambdaRunner,
-    context: { functionName }
+    context: { functionName: targetFunctionName, crtLambdaContext }
   }
 }
 
 const lambdaRunner = async (axiosConfig: AxiosRequestConfig, operation: Operation, context?: UnknownContext) => {
-  const proxyEventV2 = convertAxiosToApiGw(axiosConfig, operation)
+  const proxyEventV2 = convertAxiosToApiGw(axiosConfig, operation, context?.crtLambdaContext as Context)
   const payload = JSON.stringify(proxyEventV2)
   const functionName = context?.functionName as string
   return await invokeLambda({ payload, functionName })
     .then((resp) => convertApiGwToAxios(resp, axiosConfig))
 }
 
-export const convertAxiosToApiGw = (config: AxiosRequestConfig, operation: Operation): APIGatewayProxyEventV2 => {
+export const convertAxiosToApiGw = (config: AxiosRequestConfig, operation: Operation, crtLambdaContext?: Context): APIGatewayProxyEventV2 => {
   // extract path params
   // eg: for path template /v1/users/{id} & path url /v1/users/1108 -> will extract {'id': '1108'}
   const template = operation.path
@@ -76,7 +77,8 @@ export const convertAxiosToApiGw = (config: AxiosRequestConfig, operation: Opera
       apiId: 'lambda-invoke',
       authorizer: {
         lambda: {
-          'lambda-invoke': true
+          'lambda-invoke': true,
+          callerIdentity: crtLambdaContext?.invokedFunctionArn ?? 'lambda-invoke-not-specified'
         }
       },
       domainName: 'lambda-invoke',
@@ -88,7 +90,7 @@ export const convertAxiosToApiGw = (config: AxiosRequestConfig, operation: Opera
         protocol: 'HTTP/1.1',
         userAgent: 'lambda-invoke'
       },
-      requestId: `lambda-invoke-${uuidv4()}`,
+      requestId: crtLambdaContext?.awsRequestId ?? `lambda-invoke-${uuidv4()}`,
       routeKey: '$default',
       stage: '$default',
       time: new Date().toISOString(),
