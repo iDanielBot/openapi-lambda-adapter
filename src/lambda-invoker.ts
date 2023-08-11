@@ -31,7 +31,7 @@ export const invokeLambda = async (params: { payload: string, functionName: stri
     throw new Error(res.Payload?.toString())
   }
 
-  const response = safeParseJson(res.Payload?.toString())
+  const response = safeParseJson(res.Payload?.transformToString())
 
   // response is not in JSON format
   if (!isApiGwStructuredResp(response)) {
