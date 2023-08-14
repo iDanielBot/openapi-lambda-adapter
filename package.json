@@ -1,7 +1,7 @@
 {
   "name": "openapi-lambda-adapter",
   "description": "JavaScript client library for integrating AWS Lambdas with openapi-client-axios",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "author": "idanielbot botdaniel11@gmail.com ",
   "license": "MIT",
   "keywords": [
@@ -38,18 +38,21 @@
     "debug": "^4.3.4",
     "uuid": "^9.0.0"
   },
+  "peerDependencies": {
+    "@aws-sdk/util-stream": "^3.374.0",
+    "@aws-sdk/client-lambda": "^3.388.0"
+  },
   "devDependencies": {
     "@jest/types": "^29.0.3",
-    "@types/aws-lambda": "^8.10.104",
+    "@types/aws-lambda": "^8.10.119",
     "@types/debug": "^4.1.7",
     "@types/jest": "^27.4.0",
     "@types/json-schema": "^7.0.6",
-    "@types/node": "^18.7.18",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/node": "^20.3.2",
     "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^5.38.0",
-    "aws-lambda": "^1.0.7",
-    "aws-sdk": "^2.1220.0",
-    "aws-sdk-mock": "^5.7.0",
+    "aws-sdk-client-mock": "^3.0.0",
     "axios": "^0.25.0",
     "axios-mock-adapter": "^1.16.0",
     "eslint": "^8.23.1",

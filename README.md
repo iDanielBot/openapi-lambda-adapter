@@ -2,6 +2,11 @@
 
 <p align="center">JavaScript/Typescript library for making AWS Lambda to Lambda calls via <a href="https://github.com/anttiviljami/openapi-client-axios" target="_blank">openapi-client-axios</a> .
 
+## Versioning
+
+### 0.x to 1.x
+- changed to AWS SDK v3 to reduce bundle size and allow the update to the Node 18 runtime
+
 ## Features
 
 - [x] Easy to make API like calls via <a href="https://github.com/anttiviljami/openapi-client-axios" target="_blank">openapi-client-axios</a> library.

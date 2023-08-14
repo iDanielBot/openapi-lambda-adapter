@@ -1,5 +1,5 @@
 import { APIGatewayProxyStructuredResultV2 } from 'aws-lambda'
-import { Lambda } from 'aws-sdk'
+import { InvocationResponse, Lambda } from '@aws-sdk/client-lambda'
 import { safeParseJson } from './util'
 
 let lambdaClient: Lambda
@@ -22,7 +22,6 @@ export const invokeLambda = async (params: { payload: string, functionName: stri
       LogType: 'None',
       Payload: Buffer.from(payload)
     })
-    .promise()
 
   if (!isSuccess(res.StatusCode)) {
     throw new Error(`Failed to invoke lambda ${params.functionName} synchronously`)
@@ -32,7 +31,7 @@ export const invokeLambda = async (params: { payload: string, functionName: stri
     throw new Error(res.Payload?.toString())
   }
 
-  const response = safeParseJson(res.Payload?.toString())
+  const response = safeParseJson(res.Payload?.transformToString())
 
   // response is not in JSON format
   if (!isApiGwStructuredResp(response)) {
@@ -56,4 +55,4 @@ const isApiGwStructuredResp = (resp: unknown): resp is APIGatewayProxyStructured
   return true
 }
 
-const hasTimeout = (res: Lambda.InvocationResponse) => 'FunctionError' in res && res.Payload?.toString().includes('Task timed out')
+const hasTimeout = (res: InvocationResponse) => 'FunctionError' in res && res.Payload?.toString().includes('Task timed out')
