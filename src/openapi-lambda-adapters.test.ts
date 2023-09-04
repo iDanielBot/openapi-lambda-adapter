@@ -178,6 +178,32 @@ describe('Adapt axios request/response to AWS Lambda Proxy Event/Response', () =
       expect(event.headers['x-null']).toBeUndefined()
       expect(event.headers['x-undefined']).toBeUndefined()
     })
+
+    it('ignores query params with undefined/null values', () => {
+      // given
+      const axiosConfig: AxiosRequestConfig = {
+        method: 'get',
+        url: '/v1/users',
+        params: {
+          limit: 20,
+          offset: null,
+          flag: undefined
+        }
+      }
+      const operation: Operation = {
+        path: '/v1/users',
+        method: HttpMethod.Get,
+        responses: {}
+      }
+
+      // then
+      const event = convertAxiosToApiGw(axiosConfig, operation)
+      expect(event.pathParameters).toEqual({})
+      expect(event.queryStringParameters).toEqual({
+        limit: '20'
+      })
+      expect(event.rawQueryString).toEqual('limit=20')
+    })
   })
 
   describe('Api GW Proxy Response to Axios Response', () => {

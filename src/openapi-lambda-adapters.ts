@@ -41,13 +41,13 @@ export const convertAxiosToApiGw = (config: AxiosRequestConfig, operation: Opera
   }
 
   // extract query params -> convert each value to ta string
-  const queryParams = Object.entries(config.params ?? {}).reduce<APIGatewayProxyEventQueryStringParameters>((queryParams, [key, val]) => {
-    queryParams[key] = val?.toString()
+  const queryParams = Object.entries(config.params ?? {}).filter(([_key, val]) => val !== null && val !== undefined).reduce<APIGatewayProxyEventQueryStringParameters>((queryParams, [key, val]) => {
+    queryParams[key] = val.toString()
     return queryParams
   }, {})
 
   const queryString: string[] = []
-  Object.entries(config.params ?? {}).forEach(([key, val]) => {
+  Object.entries(config.params ?? {}).filter(([_key, val]) => val !== null && val !== undefined).forEach(([key, val]) => {
     if (val && Array.isArray(val)) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       queryString.push(...val.map((entry) => `${key}=${entry.toString()}`))
@@ -55,9 +55,6 @@ export const convertAxiosToApiGw = (config: AxiosRequestConfig, operation: Opera
       queryString.push(`${key}=${val.toString()}`)
     }
   })
-
-  const urlSearchParams = new URLSearchParams()
-  Object.entries(config.params ?? {}).forEach(([key, val]) => urlSearchParams.append(key, val.toString()))
 
   const headers: Record<string, string> = {}
   for (const [key, val] of Object.entries(config.headers ?? {}).filter(([_key, val]) => val !== null && val !== undefined)) {
