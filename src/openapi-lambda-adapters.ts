@@ -42,7 +42,7 @@ export const convertAxiosToApiGw = (config: AxiosRequestConfig, operation: Opera
 
   // extract query params -> convert each value to ta string
   const queryParams = Object.entries(config.params ?? {}).reduce<APIGatewayProxyEventQueryStringParameters>((queryParams, [key, val]) => {
-    queryParams[key] = val.toString()
+    queryParams[key] = val?.toString()
     return queryParams
   }, {})
 
