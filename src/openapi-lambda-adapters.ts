@@ -41,13 +41,13 @@ export const convertAxiosToApiGw = (config: AxiosRequestConfig, operation: Opera
   }
 
   // extract query params -> convert each value to ta string
-  const queryParams = Object.entries(config.params ?? {}).reduce<APIGatewayProxyEventQueryStringParameters>((queryParams, [key, val]) => {
+  const queryParams = Object.entries(config.params ?? {}).filter(entryValueExists).reduce<APIGatewayProxyEventQueryStringParameters>((queryParams, [key, val]) => {
     queryParams[key] = val?.toString()
     return queryParams
   }, {})
 
   const queryString: string[] = []
-  Object.entries(config.params ?? {}).forEach(([key, val]) => {
+  Object.entries(config.params ?? {}).filter(entryValueExists).forEach(([key, val]) => {
     if (val && Array.isArray(val)) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       queryString.push(...val.map((entry) => `${key}=${entry.toString()}`))
@@ -56,11 +56,8 @@ export const convertAxiosToApiGw = (config: AxiosRequestConfig, operation: Opera
     }
   })
 
-  const urlSearchParams = new URLSearchParams()
-  Object.entries(config.params ?? {}).forEach(([key, val]) => urlSearchParams.append(key, val.toString()))
-
   const headers: Record<string, string> = {}
-  for (const [key, val] of Object.entries(config.headers ?? {}).filter(([_key, val]) => val !== null && val !== undefined)) {
+  for (const [key, val] of Object.entries(config.headers ?? {}).filter(entryValueExists)) {
     headers[key] = val.toString()
   }
 
@@ -123,6 +120,8 @@ export const convertApiGwToAxios = (resp: APIGatewayProxyStructuredResultV2, axi
 
   return axiosResp
 }
+
+const entryValueExists = (entry: [string, unknown]): boolean => entry[1] !== null && entry[1] !== undefined
 
 class AxiosError extends Error {
   public readonly code: string
