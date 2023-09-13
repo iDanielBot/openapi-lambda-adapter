@@ -27,11 +27,13 @@ export const invokeLambda = async (params: { payload: string, functionName: stri
     throw new Error(`Failed to invoke lambda ${params.functionName} synchronously`)
   }
 
-  if (hasTimeout(res)) {
-    throw new Error(res.Payload?.toString())
+  const safePayload = Buffer.from(res.Payload).toString('utf-8')
+
+  if (hasTimeout(res, safePayload)) {
+    throw new Error(safePayload)
   }
 
-  const response = safeParseJson(res.Payload?.transformToString())
+  const response = safeParseJson(safePayload)
 
   // response is not in JSON format
   if (!isApiGwStructuredResp(response)) {
@@ -55,4 +57,4 @@ const isApiGwStructuredResp = (resp: unknown): resp is APIGatewayProxyStructured
   return true
 }
 
-const hasTimeout = (res: InvocationResponse) => 'FunctionError' in res && res.Payload?.toString().includes('Task timed out')
+const hasTimeout = (res: InvocationResponse, safePayload: string) => 'FunctionError' in res && safePayload?.includes('Task timed out')
