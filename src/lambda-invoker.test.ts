@@ -1,7 +1,7 @@
 import { Lambda, InvokeCommand } from '@aws-sdk/client-lambda'
 import { invokeLambda } from './lambda-invoker'
 import { mockClient } from 'aws-sdk-client-mock'
-import { Uint8ArrayBlobAdapter } from '@aws-sdk/util-stream'
+import { Uint8ArrayBlobAdapter } from '@smithy/util-stream'
 
 const mockLambda = mockClient(Lambda)
 
