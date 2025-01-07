@@ -1,4 +1,4 @@
-import { APIGatewayProxyStructuredResultV2 } from 'aws-lambda'
+import { APIGatewayProxyStructuredResultV2, Context } from 'aws-lambda'
 import { AxiosRequestConfig } from 'axios'
 import { AxiosError, HttpMethod, Operation } from 'openapi-client-axios'
 import { convertAxiosToApiGw, convertApiGwToAxios } from './openapi-lambda-adapters'
@@ -26,7 +26,8 @@ describe('Adapt axios request/response to AWS Lambda Proxy Event/Response', () =
       // then
       const event = convertAxiosToApiGw(axiosConfig, operation)
       expect(event.rawPath).toEqual('/v1/users')
-      expect(Object.keys(event.headers).length).toEqual(2)
+      expect(Object.keys(event.headers)).toContain('Accept')
+      expect(Object.keys(event.headers)).toContain('authorization')
       expect(event.pathParameters).toEqual({})
       expect(event.queryStringParameters).toEqual({})
       expect(event.rawQueryString).toEqual('')
@@ -204,7 +205,52 @@ describe('Adapt axios request/response to AWS Lambda Proxy Event/Response', () =
       expect(event.headers['x-null']).toBeUndefined()
       expect(event.headers['x-undefined']).toBeUndefined()
     })
-    
+
+    it('defaults to lambda arn the user agent when passed in the context', () => {
+      // given
+      const axiosConfig: AxiosRequestConfig = {
+        method: 'get',
+        url: '/v1/users',
+      }
+      const operation: Operation = {
+        path: '/v1/users',
+        method: HttpMethod.Get,
+        responses: {}
+      }
+
+      // then
+      const event = convertAxiosToApiGw(axiosConfig, operation, {
+        invokedFunctionArn: 'arn:aws:lambda:us-east-1:123456789012:function:my-function'
+      } as Context)
+      
+      expect(event.requestContext.authorizer.lambda)
+      expect(event.requestContext.http.userAgent).toBe('lambda-invoke-arn:aws:lambda:us-east-1:123456789012:function:my-function')
+      expect(event.headers['User-Agent']).toBe('lambda-invoke-arn:aws:lambda:us-east-1:123456789012:function:my-function')
+    })
+
+    it('includes the user agent when passed in the request config', () => {
+      // given
+      const axiosConfig: AxiosRequestConfig = {
+        method: 'get',
+        url: '/v1/users',
+        headers: {
+          'User-Agent': 'daniel-api',
+        }
+      }
+      const operation: Operation = {
+        path: '/v1/users',
+        method: HttpMethod.Get,
+        responses: {}
+      }
+
+      // then
+      const event = convertAxiosToApiGw(axiosConfig, operation, {
+        invokedFunctionArn: 'arn:aws:lambda:us-east-1:123456789012:function:my-function'
+      } as Context)
+      
+      expect(event.requestContext.http.userAgent).toBe('daniel-api')
+      expect(event.headers['User-Agent']).toBe('daniel-api')
+    })
   })
 
   describe('Api GW Proxy Response to Axios Response', () => {
