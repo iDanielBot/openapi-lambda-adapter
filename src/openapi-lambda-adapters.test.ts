@@ -1,7 +1,7 @@
 import { APIGatewayProxyStructuredResultV2, Context } from 'aws-lambda'
 import { AxiosRequestConfig } from 'axios'
 import { AxiosError, HttpMethod, Operation } from 'openapi-client-axios'
-import { convertAxiosToApiGw, convertApiGwToAxios } from './openapi-lambda-adapters'
+import { convertApiGwToAxios, convertAxiosToApiGw } from './openapi-lambda-adapters'
 
 describe('Adapt axios request/response to AWS Lambda Proxy Event/Response', () => {
 
@@ -251,6 +251,36 @@ describe('Adapt axios request/response to AWS Lambda Proxy Event/Response', () =
       expect(event.requestContext.http.userAgent).toBe('daniel-api')
       expect(event.headers['User-Agent']).toBe('daniel-api')
     })
+
+    it('converts axios call with array query params containing strings, undefined, and numbers', () => {
+      // given
+      const axiosConfig: AxiosRequestConfig = {
+        method: 'get',
+        url: '/v1/items',
+        params: {
+          tags: ['foo', undefined, 'bar'],
+          ids: [1, 2, undefined, 3],
+          empty: [],
+          mixed: ['a', 2, undefined, 'b'],
+        }
+      }
+      const operation: Operation = {
+        path: '/v1/items',
+        method: HttpMethod.Get,
+        responses: {}
+      }
+
+      // then
+      const event = convertAxiosToApiGw(axiosConfig, operation)
+      expect(event.queryStringParameters).toEqual({
+        tags: 'foo,bar',
+        ids: '1,2,3',
+        empty: '',
+        mixed: 'a,2,b'
+      })
+      expect(event.rawQueryString).toEqual('tags=foo&tags=bar&ids=1&ids=2&ids=3&empty=&mixed=a&mixed=2&mixed=b')
+    })
+
   })
 
   describe('Api GW Proxy Response to Axios Response', () => {

@@ -1,18 +1,19 @@
 import type {
-  APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2,
-  APIGatewayProxyEventQueryStringParameters, APIGatewayProxyEventPathParameters,
+  APIGatewayProxyEventPathParameters,
+  APIGatewayProxyEventQueryStringParameters,
   APIGatewayProxyEventV2WithLambdaAuthorizer,
+  APIGatewayProxyStructuredResultV2,
   Context
 } from 'aws-lambda'
 
 import createDebug from 'debug'
 
 import type { AxiosRequestConfig, AxiosResponse } from 'axios'
-import type { Runner, Operation, UnknownContext } from 'openapi-client-axios'
-import { invokeLambda } from './lambda-invoker'
 import { params } from 'bath/params'
-import { safeParseJson } from './util'
+import type { Operation, Runner, UnknownContext } from 'openapi-client-axios'
 import { v4 as uuidv4 } from 'uuid'
+import { invokeLambda } from './lambda-invoker'
+import { safeParseJson } from './util'
 
 const debug = createDebug('openapi-lambda-adapter')
 
@@ -43,17 +44,26 @@ export const convertAxiosToApiGw = (config: AxiosRequestConfig, operation: Opera
     ...parsedParams
   }
 
-  // extract query params -> convert each value to ta string
+  // extract query params -> convert each value to a string
   const queryParams = Object.entries(config.params ?? {}).filter(entryValueExists).reduce<APIGatewayProxyEventQueryStringParameters>((queryParams, [key, val]) => {
-    queryParams[key] = val?.toString()
+    if (Array.isArray(val)) {
+      // Use valueExists to filter out undefined/null
+      queryParams[key] = val.filter(valueExists).map(v => v.toString()).join(',')
+    } else {
+      queryParams[key] = val?.toString()
+    }
     return queryParams
   }, {})
 
   const queryString: string[] = []
   Object.entries(config.params ?? {}).filter(entryValueExists).forEach(([key, val]) => {
-    if (val && Array.isArray(val)) {
+    if (Array.isArray(val)) {
+      const filtered = val.filter(valueExists)
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      queryString.push(...val.map((entry) => `${key}=${entry.toString()}`))
+      queryString.push(...filtered.map((entry) => `${key}=${entry.toString()}`))
+      if (filtered.length === 0) {
+        queryString.push(`${key}=`)
+      }
     } else {
       queryString.push(`${key}=${val.toString()}`)
     }
@@ -134,7 +144,9 @@ export const convertApiGwToAxios = (resp: APIGatewayProxyStructuredResultV2, axi
   return axiosResp
 }
 
-const entryValueExists = (entry: [string, unknown]): boolean => entry[1] !== null && entry[1] !== undefined
+const entryValueExists = (entry: [string, unknown]): boolean => valueExists(entry[1])
+
+const valueExists = (value: unknown): boolean => value !== null && value !== undefined
 
 class AxiosError extends Error {
   public readonly code: string
